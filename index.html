@@ -473,9 +473,9 @@ function renderFinish(app){
    <p>hat die Sicherheitsausbildung abgeschlossen und kennt Sicherheitseinrichtungen, Notfallverhalten, Gefahrenpiktogramme und Sicherheitszeichen.</p>
    <table class="res">${resultRows().map(r=>`<tr><td>${esc(r.title)}</td><td>${r.r}</td></tr>`).join('')}</table>
    <p style="margin-top:14px;font-size:.92rem;color:var(--muted)">Gültig erst mit Unterschrift von P. Manetsch.</p></section>
-   <section class="card"><h2>Führerschein verschicken</h2>${tuebSay('Schick dir dein PDF selbst per Mail. Am Laptop öffnest du die Mail, druckst den Führerschein aus und gibst ihn P. Manetsch zum Unterschreiben.')}
-   <ol class="intro" style="padding-left:20px;margin:8px 0 0"><li>Tippe auf <b>Per E-Mail senden</b>.</li><li>Wähle deine Mail-App und gib die gewünschte Adresse ein.</li><li>Am Laptop: Mail öffnen → PDF öffnen → drucken.</li></ol>
-   <div id="msg"></div><div class="actions"><button class="btn ghost" id="back">Zurück</button><span class="spacer"></span><button class="btn ghost" id="pdf">📄 PDF herunterladen</button><button class="btn okb" id="share">✉️ Per E-Mail senden</button></div>
+   <section class="card"><h2>Führerschein verschicken</h2>${tuebSay('Schick dir dein PDF selbst – per Mail oder WhatsApp. Am Laptop öffnest du es, druckst den Führerschein aus und gibst ihn P. Manetsch zum Unterschreiben.')}
+   <ol class="intro" style="padding-left:20px;margin:8px 0 0"><li>Tippe auf <b>Per Mail oder WhatsApp senden</b>.</li><li><b>Mail:</b> Mail-App wählen und die gewünschte Adresse eingeben.<br><b>WhatsApp:</b> den Chat mit dir selbst wählen («Du» / deine eigene Nummer).</li><li>Am Laptop: Mail oder WhatsApp Web öffnen → PDF öffnen → drucken.</li></ol>
+   <div id="msg"></div><div class="actions"><button class="btn ghost" id="back">Zurück</button><span class="spacer"></span><button class="btn ghost" id="pdf">📄 PDF herunterladen</button><button class="btn okb" id="share">📤 Per Mail oder WhatsApp senden</button></div>
    <div class="actions"><button class="btn ghost small" id="reset">Neu beginnen (für die nächste Person)</button></div></section>`;
   $('#back').onclick=()=>go(STEPS.length-1);
   $('#pdf').onclick=makePdf;
@@ -483,13 +483,13 @@ function renderFinish(app){
   if(canShareFiles()){
     sh.onclick=sharePdf; sh.disabled=true; sh.textContent='PDF wird vorbereitet …';
     const p=preparePdf();
-    if(!p){ sh.disabled=false; sh.textContent='✉️ Per E-Mail senden'; sh.onclick=()=>msg('bad',noPdfLib) }
-    else p.then(b=>{ if(b){ pdfFile=new File([b],fileName(),{type:'application/pdf'}) } sh.disabled=false; sh.textContent='✉️ Per E-Mail senden' });
+    if(!p){ sh.disabled=false; sh.textContent='📤 Per Mail oder WhatsApp senden'; sh.onclick=()=>msg('bad',noPdfLib) }
+    else p.then(b=>{ if(b){ pdfFile=new File([b],fileName(),{type:'application/pdf'}) } sh.disabled=false; sh.textContent='📤 Per Mail oder WhatsApp senden' });
   } else {
     // Am Laptop / Browser ohne Teilen-Funktion: direkt herunterladen
     sh.classList.add('hidden');
     $('#pdf').classList.remove('ghost');$('#pdf').classList.add('okb');
-    msg('info','Auf diesem Gerät gibt es kein Teilen-Menü. Lade das PDF herunter und drucke es aus – oder öffne die Seite auf dem Handy und schick es dir per Mail.');
+    msg('info','Auf diesem Gerät gibt es kein Teilen-Menü. Lade das PDF herunter und drucke es aus – oder öffne die Seite auf dem Handy und schick es dir per Mail oder WhatsApp.');
   }
   $('#reset').onclick=resetAll;
 }
