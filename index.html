@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laborführerschein</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --ink:#1d2340; --muted:#5d6482; --bg:#f4f6fb; --card:#fff; --line:#e2e6f0;
+  --brand:#2f6df6; --brand-d:#1f4fc4; --ok:#1f9d55; --ok-bg:#e5f6ec; --bad:#d64545; --bad-bg:#fdecec;
+  --warn:#f5b400; --warn-bg:#fff6d9; --radius:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-size:17px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:820px;margin:0 auto;padding:18px 16px 80px}
+header.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+header.top .logo{width:44px;height:44px;flex:none}
+header.top h1{font-size:1.25rem;margin:0;font-weight:900;letter-spacing:-.01em}
+header.top .who{margin-left:auto;font-size:.9rem;color:var(--muted);text-align:right}
+.progress{display:flex;gap:5px;margin:4px 0 18px}
+.progress span{flex:1;height:9px;border-radius:9px;background:var(--line)}
+.progress span.done{background:var(--ok)}
+.progress span.cur{background:var(--brand)}
+.card{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:0 2px 0 var(--line),0 8px 28px rgba(29,35,64,.06);margin-bottom:16px}
+.card h2{margin:0 0 4px;font-size:1.45rem;font-weight:900;line-height:1.2}
+.card h3{margin:20px 0 8px;font-size:1.08rem;font-weight:800}
+.kicker{font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--brand)}
+.time{display:inline-block;font-size:.8rem;font-weight:700;color:var(--muted);background:var(--bg);border-radius:20px;padding:2px 10px;margin-left:6px}
+.intro{color:var(--muted);margin:6px 0 4px}
+.btn{border:0;border-radius:14px;padding:12px 20px;font-weight:800;cursor:pointer;background:var(--brand);color:#fff;box-shadow:0 3px 0 var(--brand-d);transition:transform .05s}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--brand-d)}
+.btn:disabled{background:#b9c2d8;box-shadow:none;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 0 0 2px var(--line) inset}
+.btn.okb{background:var(--ok);box-shadow:0 3px 0 #157a40}
+.btn.small{padding:7px 12px;font-size:.88rem;border-radius:10px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:20px}
+.actions .spacer{flex:1}
+label.field{display:block;margin:12px 0}
+label.field span{display:block;font-weight:700;margin-bottom:5px}
+input[type=text],textarea,select{width:100%;border:2px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;outline:none}
+input[type=text]:focus,textarea:focus,select:focus{border-color:var(--brand)}
+textarea{min-height:76px;resize:vertical}
+.msg{border-radius:12px;padding:12px 14px;margin-top:14px;font-weight:700}
+.msg.ok{background:var(--ok-bg);color:#14663a}
+.msg.bad{background:var(--bad-bg);color:#9b2c2c}
+.msg.info{background:var(--warn-bg);color:#7a5a00}
+.item{border:2px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;background:#fff}
+.hint{color:#9b2c2c;font-weight:700;font-size:.92rem}
+.hint:empty{display:none}
+.item.ok{border-color:var(--ok);background:var(--ok-bg)}
+.item.bad{border-color:var(--bad);background:var(--bad-bg)}
+.row{display:flex;gap:14px;align-items:center}
+.row .grow{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.grid2>.item{margin:0}
+.stack{display:flex;flex-direction:column;align-items:center;gap:10px}
+.stack .grow{width:100%}
+.stack select{font-size:.92rem}
+.pic{width:84px;height:84px;flex:none}
+.photo-box{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-top:8px}
+.photo-box img{width:120px;height:90px;object-fit:cover;border-radius:10px;border:2px solid var(--line)}
+.upl{display:inline-flex;align-items:center;gap:8px;border:2px dashed #b9c2d8;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:700;color:var(--brand-d);background:#f8faff}
+.upl input{display:none}
+.chk{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:.95rem;cursor:pointer}
+.chk input{width:20px;height:20px}
+.order li{list-style:none;display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;background:#fff}
+.order{padding:0;margin:0}
+.order li .n{width:28px;height:28px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:900;flex:none}
+.order li.ok{border-color:var(--ok);background:var(--ok-bg)}
+.order li.bad{border-color:var(--bad);background:var(--bad-bg)}
+.order li .mv{margin-left:auto;display:flex;gap:4px}
+.mc .opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:2px solid var(--line);border-radius:12px;margin:6px 0;cursor:pointer;background:#fff}
+.mc .opt input{margin-top:4px;width:18px;height:18px;flex:none}
+.mc .opt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.mc .opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+.story p{margin:0}
+.sent{display:block;padding:10px 12px;border-radius:12px;border:2px solid var(--line);margin:7px 0;cursor:pointer;background:#fff;user-select:none}
+.sent.marked{border-color:var(--warn);background:var(--warn-bg)}
+.sent.ok{border-color:var(--ok);background:var(--ok-bg)}
+.sent.bad{border-color:var(--bad);background:var(--bad-bg)}
+.sent .why{display:block;font-size:.9rem;color:#14663a;margin-top:4px;font-weight:700}
+.badge{display:inline-block;font-size:.78rem;font-weight:800;padding:2px 9px;border-radius:20px;background:var(--bg);color:var(--muted)}
+.licence{border:3px solid var(--ink);border-radius:20px;padding:22px;background:linear-gradient(135deg,#fffdf3,#eef4ff);position:relative;overflow:hidden}
+.licence h2{font-size:1.6rem}
+.licence .stamp{position:absolute;right:16px;top:16px;transform:rotate(12deg);border:3px solid var(--ok);color:var(--ok);font-weight:900;border-radius:10px;padding:4px 10px;font-size:1rem}
+table.res{width:100%;border-collapse:collapse;margin-top:10px;font-size:.95rem}
+table.res td{padding:7px 4px;border-bottom:1px solid var(--line)}
+table.res td:last-child{text-align:right;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(29,35,64,.45);display:grid;place-items:center;padding:16px;z-index:10}
+.modal .card{max-width:420px}
+.hidden{display:none!important}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:6px}
+@media (max-width:560px){.card{padding:16px}.pic{width:68px;height:68px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="14" fill="#2f6df6"/><path d="M19 11h10v3h-2v8l8 13a3 3 0 0 1-2.6 4.5H15.6A3 3 0 0 1 13 35l8-13v-8h-2z" fill="#fff"/><path d="M16.5 31h15l2 3.4a1.3 1.3 0 0 1-1.1 2H15.6a1.3 1.3 0 0 1-1.1-2z" fill="#f5b400"/></svg>
+    <h1>Laborführerschein</h1>
+    <div class="who" id="who"></div>
+  </header>
+  <div class="progress" id="progress"></div>
+  <main id="app"></main>
+</div>
+<div class="modal hidden" id="modal"><div class="card"><h2 id="mTitle"></h2><p id="mText" class="intro"></p><div class="actions"><button class="btn ghost" id="mNo">Abbrechen</button><span class="spacer"></span><button class="btn" id="mYes">OK</button></div></div></div>
+
+<script>
+/* ---------- Piktogramme (vereinfachte eigene Zeichnungen) ---------- */
+const D = '<polygon points="50,5 95,50 50,95 5,50" fill="#fff" stroke="#d62828" stroke-width="7" stroke-linejoin="round"/>';
+const FLAME = (tx=0,ty=0,s=1)=>`<g transform="translate(${tx} ${ty}) scale(${s})"><path d="M50 27c8 10 15 17 13 28-1 9-7 15-13 15s-13-5-13-14c0-8 6-12 8-19 2 6 5 8 7 7 1-6-1-11-2-17z" fill="#111"/></g>`;
+const SVG = {
+  explosiv: D+'<circle cx="44" cy="60" r="10" fill="#111"/><g stroke="#111" stroke-width="3.5" stroke-linecap="round"><path d="M56 48l8-9M60 54l11-3M52 44l1-11M64 60l8 4M44 40l-6-8M30 52l-8-3"/></g><path d="M66 34l3 6 6 1-5 4 1 6-5-3-5 3 1-6-5-4 6-1z" fill="#111"/>',
+  entzuendbar: D+FLAME()+'<rect x="35" y="72" width="30" height="4" fill="#111"/>',
+  oxidierend: D+FLAME(17,-2,.66)+'<circle cx="50" cy="63" r="9" fill="none" stroke="#111" stroke-width="4.5"/><rect x="35" y="75" width="30" height="3.5" fill="#111"/>',
+  gas: D+'<g transform="rotate(-18 50 56)"><rect x="27" y="49" width="40" height="15" rx="7.5" fill="#111"/><rect x="66" y="53" width="7" height="7" fill="#111"/></g>',
+  aetzend: D+'<g fill="#111"><rect x="30" y="26" width="7" height="16" rx="2" transform="rotate(-35 33 34)"/><rect x="62" y="26" width="7" height="16" rx="2" transform="rotate(35 66 34)"/><circle cx="38" cy="50" r="2.6"/><circle cx="38" cy="57" r="2.6"/><circle cx="62" cy="50" r="2.6"/><circle cx="62" cy="57" r="2.6"/><path d="M26 66h22v6H26zM31 66l2 3 2-3M39 66l2 3 2-3"/><path d="M53 74c0-4 2-8 6-9l3-4 2 1-1 3h7c2 0 2 3 0 3h-4v1h5c2 0 2 3 0 3h-5v1h4c2 0 2 3 0 3H59c-4 0-6-1-6-2z"/></g><path d="M31 66l2 3 2-3M39 66l2 3 2-3" stroke="#fff" stroke-width="1.5" fill="none"/>',
+  giftig: D+'<g stroke="#111" stroke-width="5" stroke-linecap="round"><path d="M33 58l34 16M67 58L33 74"/></g><circle cx="50" cy="42" r="13" fill="#111"/><rect x="43" y="49" width="14" height="9" rx="3" fill="#111"/><circle cx="45" cy="41" r="3.6" fill="#fff"/><circle cx="55" cy="41" r="3.6" fill="#fff"/><path d="M48.5 48l1.5-3 1.5 3z" fill="#fff"/>',
+  reizend: D+'<rect x="45" y="27" width="10" height="31" rx="4" fill="#111"/><circle cx="50" cy="68" r="5.5" fill="#111"/>',
+  gesundheit: D+'<circle cx="50" cy="32" r="7.5" fill="#111"/><path d="M32 74c0-18 7-31 18-31s18 13 18 31z" fill="#111"/><path d="M50 50l2.8 6.6 7 .4-5.4 4.6 1.8 6.8-6.2-3.8-6.2 3.8 1.8-6.8-5.4-4.6 7-.4z" fill="#fff"/>',
+  umwelt: D+'<g stroke="#111" stroke-width="3.2" stroke-linecap="round" fill="none"><path d="M36 64V30M36 40l-8-6M36 47l9-8M36 54l-7-4M45 39l4-5"/><path d="M26 64h56" stroke-width="2.5"/></g><path d="M50 72c5-6 15-6 20 0-5 6-15 6-20 0zM70 72l7-5v10z" fill="#111"/><path d="M53 70l3 3m0-3l-3 3" stroke="#fff" stroke-width="1.4"/>'
+};
+const pict = (k)=>`<svg class="pic" viewBox="0 0 100 100" role="img" aria-label="Gefahrenpiktogramm">${SVG[k]}</svg>`;
+const SIGN = {
+  verbot:'<circle cx="50" cy="50" r="40" fill="#fff" stroke="#d62828" stroke-width="10"/><path d="M22 22l56 56" stroke="#d62828" stroke-width="10"/>',
+  gebot:'<circle cx="50" cy="50" r="44" fill="#1565c0"/><circle cx="50" cy="50" r="14" fill="#fff" opacity=".9"/>',
+  warn:'<polygon points="50,8 94,88 6,88" fill="#f5b400" stroke="#111" stroke-width="6" stroke-linejoin="round"/><rect x="46" y="38" width="8" height="28" rx="3" fill="#111"/><circle cx="50" cy="75" r="4.5" fill="#111"/>',
+  rettung:'<rect x="8" y="14" width="84" height="72" rx="6" fill="#1f8a4c"/><path d="M50 30v40M30 50h40" stroke="#fff" stroke-width="12"/>',
+  brand:'<rect x="8" y="14" width="84" height="72" rx="6" fill="#d62828"/><path d="M50 26c8 10 14 17 12 27-1 8-6 13-12 13s-12-4-12-12c0-8 6-11 8-18 2 6 4 7 6 7 1-6-1-11-2-17z" fill="#fff"/>'
+};
+const sign = (k)=>`<svg class="pic" viewBox="0 0 100 100" role="img" aria-label="Zeichenform">${SIGN[k]}</svg>`;
+
+/* ---------- Schritte ---------- */
+const STEPS = [
+ {id:'detektiv', kicker:'Schritt 1', title:'Labor-Detektiv', time:'8 Min.', type:'photos',
+  intro:'Im Notfall bleibt keine Zeit zum Suchen. Finde jede Sicherheitseinrichtung im Raum, mach ein Foto und beschreibe, wo sie ist. Nichts auslösen, nichts öffnen!',
+  items:[
+   {id:'loescher', label:'Feuerlöscher'},
+   {id:'decke', label:'Löschdecke', canMiss:true},
+   {id:'erstehilfe', label:'Erste-Hilfe-Kasten'},
+   {id:'auge', label:'Augendusche (oder Wasserhahn zum Augenspülen)', canMiss:true},
+   {id:'flucht', label:'Notausgang / Fluchtweg-Zeichen'},
+   {id:'notaus', label:'Not-Aus-Schalter oder Hauptschalter (Strom / Gas)', canMiss:true}
+  ]},
+ {id:'brand', kicker:'Schritt 2', title:'Es brennt! Was tust du?', time:'6 Min.', type:'brand',
+  intro:'Bringe zuerst die Schritte in die richtige Reihenfolge. Beantworte danach die Fragen zu Feuerlöscher und Löschdecke.',
+  order:[
+   'Alarmieren: laut «Feuer!» rufen, Lehrperson holen, Feuerwehr 118',
+   'Retten: andere warnen und Personen in Sicherheit bringen',
+   'Löschen: nur, wenn ich mich dabei nicht selbst gefährde',
+   'Raum verlassen, Tür schliessen, zum Sammelplatz gehen'
+  ],
+  mc:[
+   {q:'Wohin richtest du den Strahl des Feuerlöschers?', o:['Auf die Spitze der Flammen','Auf den Brandherd – dorthin, wo es brennt (unten)','In die Luft über dem Feuer'], a:1},
+   {q:'Warum löschst du stossweise und nicht alles auf einmal?', o:['Weil der Löscher nur wenige Sekunden reicht und man so gezielt löschen kann','Weil es sonst zu laut ist','Weil der Löscher sonst explodiert'], a:0},
+   {q:'Die Kleidung einer Mitschülerin brennt. Was tust du?', o:['Sie soll schnell zum Wasserhahn rennen','Sie hinlegen, die Löschdecke vom Kopf Richtung Füsse auflegen und andrücken','Mit dem Laborkittel auf sie einschlagen, während sie steht'], a:1},
+   {q:'Im Becherglas brennt ein wenig Flüssigkeit. Was ist richtig?', o:['Wasser darüber giessen','Hineinblasen','Gas abstellen und das Glas mit Löschdecke oder Deckel abdecken'], a:2},
+   {q:'Wann löschst du NICHT selbst?', o:['Wenn das Feuer gross ist, viel Rauch entsteht oder der Fluchtweg versperrt ist','Wenn der Feuerlöscher rot ist','Nie – man muss immer selbst löschen'], a:0}
+  ]},
+ {id:'notruf', kicker:'Schritt 3', title:'Notruf', time:'4 Min.', type:'match',
+  intro:'Welche Nummer erreicht wen? Danach schreibst du eine Notfallmeldung.',
+  options:['Feuerwehr','Sanität / Ambulanz','Polizei','Tox Info Suisse (Vergiftungen)','Euro-Notruf (alle Notfälle)'],
+  items:[
+   {id:'118', html:'<b style="font-size:1.6rem">118</b>', a:'Feuerwehr'},
+   {id:'144', html:'<b style="font-size:1.6rem">144</b>', a:'Sanität / Ambulanz'},
+   {id:'117', html:'<b style="font-size:1.6rem">117</b>', a:'Polizei'},
+   {id:'145', html:'<b style="font-size:1.6rem">145</b>', a:'Tox Info Suisse (Vergiftungen)'},
+   {id:'112', html:'<b style="font-size:1.6rem">112</b>', a:'Euro-Notruf (alle Notfälle)'}
+  ],
+  text:{id:'meldung', label:'Im Labor hat sich jemand schwer verbrannt. Schreib auf, was du am Telefon sagst. Beantworte: Wer ruft an? Was ist passiert? Wo genau (Adresse der Schule, Zimmer)? Wie viele Verletzte?', min:40}},
+ {id:'erstehilfe', kicker:'Schritt 4', title:'Erste Hilfe', time:'4 Min.', type:'match',
+  intro:'Was tust du sofort? Wähle zu jeder Situation die richtige Massnahme.',
+  options:[
+   'Augendusche: mindestens 10–15 Minuten spülen, Lid offen halten',
+   'Betroffene Kleidung ausziehen, Haut mit viel Wasser spülen',
+   'Sofort 10–20 Minuten unter fliessendem, nicht eiskaltem Wasser kühlen',
+   'Wunde abdecken, Druck ausüben, Lehrperson holen',
+   'Mund ausspülen, nicht erbrechen, Tox Info 145 anrufen'
+  ],
+  items:[
+   {id:'auge', html:'Spritzer ins <b>Auge</b>', a:'Augendusche: mindestens 10–15 Minuten spülen, Lid offen halten'},
+   {id:'haut', html:'Chemikalie auf <b>Haut und Kleidung</b>', a:'Betroffene Kleidung ausziehen, Haut mit viel Wasser spülen'},
+   {id:'brand', html:'<b>Verbrennung</b> am Brenner oder heissen Glas', a:'Sofort 10–20 Minuten unter fliessendem, nicht eiskaltem Wasser kühlen'},
+   {id:'schnitt', html:'<b>Schnitt</b> an einer Glasscherbe', a:'Wunde abdecken, Druck ausüben, Lehrperson holen'},
+   {id:'schluck', html:'Chemikalie <b>verschluckt</b>', a:'Mund ausspülen, nicht erbrechen, Tox Info 145 anrufen'}
+  ],
+  note:'Bei jedem Unfall gilt zusätzlich: sofort die Lehrperson informieren – auch bei Kleinigkeiten.'},
+ {id:'ghs', kicker:'Schritt 5', title:'Gefahrenpiktogramme', time:'5 Min.', type:'match',
+  intro:'Diese roten Rauten findest du auf Chemikalien – im Labor und zu Hause. Was bedeuten sie?',
+  options:['explosiv','entzündbar','brandfördernd','Gas unter Druck','ätzend','giftig (schon kleine Mengen)','reizend / gesundheitsschädlich','langfristige Gesundheitsgefahr','umweltgefährlich'],
+  items:[
+   {id:'entzuendbar', html:pict('entzuendbar'), a:'entzündbar'},
+   {id:'aetzend', html:pict('aetzend'), a:'ätzend'},
+   {id:'reizend', html:pict('reizend'), a:'reizend / gesundheitsschädlich'},
+   {id:'giftig', html:pict('giftig'), a:'giftig (schon kleine Mengen)'},
+   {id:'umwelt', html:pict('umwelt'), a:'umweltgefährlich'},
+   {id:'gesundheit', html:pict('gesundheit'), a:'langfristige Gesundheitsgefahr'},
+   {id:'oxidierend', html:pict('oxidierend'), a:'brandfördernd'},
+   {id:'gas', html:pict('gas'), a:'Gas unter Druck'},
+   {id:'explosiv', html:pict('explosiv'), a:'explosiv'}
+  ]},
+ {id:'zeichen', kicker:'Schritt 6', title:'Sicherheitszeichen: Farbe und Form', time:'4 Min.', type:'match',
+  intro:'Sicherheitszeichen verraten schon an Farbe und Form, was sie wollen. Knacke den Code!',
+  options:['Verbot: Das darf ich nicht.','Gebot: Das muss ich tun.','Warnung: Achtung, Gefahr!','Rettung: Hier gibt es Hilfe / den Weg hinaus.','Brandschutz: Hier ist Löschmaterial.'],
+  items:[
+   {id:'v', html:sign('verbot'), a:'Verbot: Das darf ich nicht.'},
+   {id:'g', html:sign('gebot'), a:'Gebot: Das muss ich tun.'},
+   {id:'w', html:sign('warn'), a:'Warnung: Achtung, Gefahr!'},
+   {id:'r', html:sign('rettung'), a:'Rettung: Hier gibt es Hilfe / den Weg hinaus.'},
+   {id:'b', html:sign('brand'), a:'Brandschutz: Hier ist Löschmaterial.'}
+  ],
+  legend:'Rund + rot = ? · Rund + blau = ? · Dreieck + gelb = ? · Rechteck + grün = ? · Rechteck + rot = ?'},
+ {id:'jagd', kicker:'Schritt 7', title:'Piktogramm-Jagd', time:'5 Min.', type:'hunt',
+  intro:'Such ein echtes Gefahrenetikett: in einer Kisam-Box, im SimplyNano-Koffer oder im Chemikalienschrank (die Lehrperson öffnet ihn, du schaust nur). Nichts öffnen, nichts herausnehmen.'},
+ {id:'fehler', kicker:'Schritt 8', title:'Was läuft hier schief?', time:'6 Min.', type:'errors',
+  intro:'Lena und Tim experimentieren. Tippe alle Sätze an, in denen etwas falsch oder gefährlich ist. Es sind 14 Fehler.',
+  sents:[
+   {t:'Lena und Tim sollen verdünnte Salzsäure herstellen und damit Kalk auflösen.'},
+   {t:'Tim kommt zu spät und hat die Sicherheitsinstruktion verpasst – er fragt aber nicht nach.', e:'Wer die Instruktion verpasst, muss nachfragen, bevor er experimentiert.'},
+   {t:'Er wirft seine Jacke über den Stuhl in den Durchgang.', e:'Stolpergefahr, Fluchtweg versperrt – Jacken gehören an die Garderobe.'},
+   {t:'Dann isst er schnell den Rest seines Sandwiches am Arbeitsplatz.', e:'Im Labor wird nie gegessen oder getrunken – Chemikalien können in den Mund gelangen.'},
+   {t:'Lena zieht ihren Labormantel an.'},
+   {t:'Ihre langen Haare lässt sie offen.', e:'Lange Haare zusammenbinden – Brandgefahr am Brenner.'},
+   {t:'Die Schutzbrille hängt um ihren Hals, weil sie sonst anläuft.', e:'Die Brille gehört auf die Augen – Spritzer können blind machen.'},
+   {t:'Tim liest die Anleitung im Lehrmittel genau durch.'},
+   {t:'Er giesst zuerst die konzentrierte Säure ins Becherglas und kippt dann Wasser dazu.', e:'Erst das Wasser, dann die Säure – sonst spritzt die heisse Säure heraus.'},
+   {t:'Ein Spritzer landet auf seiner Hand – er wischt ihn am Ärmel ab und sagt nichts.', e:'Sofort mit viel Wasser spülen und die Lehrperson informieren.'},
+   {t:'Lena beugt sich über das Becherglas und riecht kräftig daran.', e:'Nie direkt riechen – Dämpfe mit der Hand zufächeln.'},
+   {t:'Den Rest der Säure giesst Tim zurück in die Vorratsflasche.', e:'Nie zurückgiessen – der ganze Vorrat wird verunreinigt.'},
+   {t:'Lena erhitzt ein Reagenzglas und hält es dabei mit der Reagenzglasklammer.'},
+   {t:'Die Öffnung des Reagenzglases zeigt dabei auf Tim.', e:'Öffnung immer von Personen weg – der Inhalt kann herausspritzen.'},
+   {t:'Dann geht sie kurz zum Nachbartisch – der Gasbrenner läuft weiter.', e:'Einen brennenden Brenner nie unbeaufsichtigt lassen.'},
+   {t:'Ein Reagenzglas fällt herunter; Lena sammelt die Scherben mit blossen Händen auf.', e:'Schnittgefahr – Handfeger und Schaufel benutzen, Glasabfallbehälter.'},
+   {t:'Am Ende leeren sie alle Reste in den Ausguss.', e:'Reste nach Anweisung der Lehrperson entsorgen.'},
+   {t:'Sie wischen den Tisch sauber und räumen die Geräte zurück.'},
+   {t:'Ohne die Hände zu waschen, gehen sie in die Pause.', e:'Nach dem Experimentieren immer die Hände waschen.'}
+  ]},
+ {id:'regeln', kicker:'Schritt 9', title:'Meine Laborregeln', time:'4 Min.', type:'rules',
+  intro:'Was nimmst du mit? Schreib die drei Regeln auf, die du am wichtigsten findest – in eigenen Worten und positiv formuliert («Ich trage …»).'}
+];
+
+/* ---------- Zustand ---------- */
+const KEY='laborfuehrerschein-v1';
+let S = load() || fresh();
+function fresh(){return {name:'',klasse:'',step:-1,done:{},tries:{},score:{},d:{},started:null,finished:null}}
+function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){/* Speicher voll oder nicht verfügbar */}}
+const D_ = (id)=> (S.d[id] = S.d[id] || {});
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = (t)=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function shuffle(a,seed){a=a.slice();let s=seed||1;for(let i=a.length-1;i>0;i--){s=(s*9301+49297)%233280;const j=Math.floor(s/233280*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function seedOf(str){let h=7;for(const c of (S.name+str))h=(h*31+c.charCodeAt(0))%100000;return h+1}
+
+function header(){
+  $('#who').innerHTML = S.name ? `${esc(S.name)}<br><span>${esc(S.klasse)}</span>` : '';
+  const p=$('#progress'); p.innerHTML='';
+  if(S.step<0){p.classList.add('hidden');return} p.classList.remove('hidden');
+  STEPS.forEach((st,i)=>{const s=document.createElement('span');if(S.done[st.id])s.className='done';if(i===S.step)s.className='cur';p.appendChild(s)});
+}
+function go(i){S.step=i;save();render();window.scrollTo({top:0,behavior:'smooth'})}
+function ask(title,text,onYes){const m=$('#modal');$('#mTitle').textContent=title;$('#mText').textContent=text;m.classList.remove('hidden');$('#mYes').onclick=()=>{m.classList.add('hidden');onYes()};$('#mNo').onclick=()=>m.classList.add('hidden')}
+
+function render(){
+  header();
+  const app=$('#app');
+  if(S.step<0) return renderLogin(app);
+  if(S.step>=STEPS.length) return renderFinish(app);
+  const st=STEPS[S.step];
+  app.innerHTML = `<section class="card"><div class="kicker">${st.kicker} von ${STEPS.length}<span class="time">⏱ ${st.time}</span></div><h2>${st.title}</h2><p class="intro">${st.intro}</p><div id="body"></div><div id="msg"></div><div class="actions">${S.step>0?'<button class="btn ghost" id="back">Zurück</button>':''}<span class="spacer"></span><button class="btn" id="check">Prüfen</button><button class="btn okb hidden" id="next">Weiter</button></div></section>`;
+  if($('#back')) $('#back').onclick=()=>go(S.step-1);
+  $('#next').onclick=()=>go(S.step+1);
+  RENDER[st.type](st,$('#body'));
+  if(S.done[st.id]) passed(st,true);
+}
+function msg(type,html){$('#msg').innerHTML=`<div class="msg ${type}">${html}</div>`}
+function passed(st,silent){
+  S.done[st.id]=true; save(); header();
+  $('#check').classList.add('hidden'); $('#next').classList.remove('hidden');
+  $('#next').textContent = S.step===STEPS.length-1 ? 'Zum Laborführerschein' : 'Weiter';
+  if(!silent) msg('ok','Super, alles richtig! Weiter geht\'s.');
+  else if(!$('#msg').innerHTML) msg('ok','Erledigt ✓ – du kannst noch etwas ändern oder weitergehen.');
+}
+function tried(st,ok,total){S.tries[st.id]=(S.tries[st.id]||0)+1;if(total!=null&&S.tries[st.id]===1)S.score[st.id]={ok,total};save()}
+
+/* ---------- Login ---------- */
+function renderLogin(app){
+  app.innerHTML=`<section class="card"><div class="kicker">Bevor du experimentieren darfst</div><h2>Hol dir deinen Laborführerschein</h2>
+  <p class="intro">Du arbeitest Schritt für Schritt: Sicherheitseinrichtungen finden und fotografieren, zuordnen, Fehler entdecken. Jeder Schritt muss stimmen, bevor der nächste kommt. Am Schluss erhältst du deinen Laborführerschein als PDF und gibst ihn ab.</p>
+  <p class="intro"><b>Zeit:</b> 30–45 Minuten · <b>Du brauchst:</b> ein Gerät mit Kamera</p>
+  <label class="field"><span>Vorname und Name</span><input type="text" id="nm" autocomplete="name" value="${esc(S.name)}"></label>
+  <label class="field"><span>Klasse</span><input type="text" id="kl" placeholder="z. B. 3. Sek" value="${esc(S.klasse)}"></label>
+  <div id="msg"></div><div class="actions"><span class="spacer"></span><button class="btn" id="go">Los geht's</button></div></section>`;
+  $('#go').onclick=()=>{const n=$('#nm').value.trim(),k=$('#kl').value.trim();
+    if(n.split(/\s+/).length<2){msg('bad','Bitte Vor- und Nachnamen eingeben.');return}
+    if(!k){msg('bad','Bitte deine Klasse eingeben.');return}
+    S.name=n;S.klasse=k;if(!S.started)S.started=new Date().toISOString();go(0)};
+}
+
+/* ---------- Foto-Hilfen ---------- */
+function compress(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{const max=900;let w=img.naturalWidth,h=img.naturalHeight;const f=Math.min(1,max/Math.max(w,h));w=Math.round(w*f);h=Math.round(h*f);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);res({src:c.toDataURL('image/jpeg',.62),w,h})};img.onerror=()=>{URL.revokeObjectURL(url);rej()};img.src=url})}
+function photoInput(onPhoto){const l=document.createElement('label');l.className='upl';l.innerHTML='📷 Foto aufnehmen / hochladen<input type="file" accept="image/*" capture="environment">';l.querySelector('input').onchange=async(e)=>{const f=e.target.files[0];if(!f)return;try{onPhoto(await compress(f))}catch(_){msg('bad','Das Foto konnte nicht geladen werden. Versuch es nochmals.')}};return l}
+
+/* ---------- Renderer ---------- */
+const RENDER = {
+ photos(st,body){
+  const d=D_(st.id);
+  // Was fehlt bei einer Einrichtung? Leerer Text = alles gut.
+  const problem=(it,v)=>{
+    const words=(v.where||'').trim().split(/\s+/).filter(w=>w.length>1).length;
+    if(v.none&&it.canMiss) return words>=3?'':'Schreib in mindestens 3 Wörtern, was ihr stattdessen tut.';
+    if(!v.photo&&words<3) return 'Foto fehlt, und die Ortsangabe braucht mindestens 3 Wörter.';
+    if(!v.photo) return 'Foto fehlt.';
+    if(words<3) return 'Beschreib den Ort in mindestens 3 Wörtern (z. B. «neben der Tür»).';
+    return '';
+  };
+  st.items.forEach(it=>{
+    const v=d[it.id]=d[it.id]||{};
+    if(!it.canMiss) v.none=false;
+    const box=document.createElement('div');box.className='item';box.id='it-'+it.id;
+    box.innerHTML=`<div class="row"><b class="grow">${it.label}</b><span class="badge" id="b-${it.id}"></span></div>
+      <div class="photo-box" id="pb-${it.id}"></div>
+      ${it.canMiss?`<label class="chk"><input type="checkbox" ${v.none?'checked':''}> Gibt es bei uns nicht</label>`:''}
+      <label class="field"><span id="lab-${it.id}">${v.none?'Was tun wir stattdessen?':'Wo genau? (z. B. «neben der Tür, rechts unten»)'}</span><input type="text" value="${esc(v.where)}"></label>
+      <div class="hint" id="h-${it.id}"></div>`;
+    body.appendChild(box);
+    const pb=box.querySelector('.photo-box');
+    const draw=()=>{pb.innerHTML='';if(v.photo&&!v.none){const im=new Image();im.src=v.photo.src;im.alt=it.label;pb.appendChild(im)}if(!v.none)pb.appendChild(photoInput(p=>{v.photo=p;save();draw();badge()}))};
+    const badge=()=>{const ok=!problem(it,v);$('#b-'+it.id).textContent=ok?'✓ fertig':'offen';$('#b-'+it.id).style.cssText=ok?'background:var(--ok-bg);color:#14663a':'';if(ok){$('#h-'+it.id).textContent='';box.className='item ok'}else if(box.classList.contains('bad')){$('#h-'+it.id).textContent=problem(it,v)}};
+    const cb=box.querySelector('input[type=checkbox]');
+    if(cb) cb.onchange=(e)=>{v.none=e.target.checked;$('#lab-'+it.id).textContent=v.none?'Was tun wir stattdessen?':'Wo genau? (z. B. «neben der Tür, rechts unten»)';save();draw();badge()};
+    box.querySelector('input[type=text]').oninput=(e)=>{v.where=e.target.value;save();badge()};
+    draw();badge();
+  });
+  $('#check').onclick=()=>{
+    let open=0;
+    st.items.forEach(it=>{const p=problem(it,d[it.id]);$('#it-'+it.id).className='item '+(p?'bad':'ok');$('#h-'+it.id).textContent=p;if(p)open++});
+    if(open){msg('bad',`Bei ${open} Einrichtung${open>1?'en':''} fehlt noch etwas – siehe rote Hinweise.`);return}
+    passed(st);
+  };
+ },
+ brand(st,body){
+  const d=D_(st.id);
+  if(!d.order) d.order=shuffle(st.order.map((_,i)=>i),seedOf('o'));
+  d.mc=d.mc||{};
+  body.innerHTML='<h3>Reihenfolge</h3><ol class="order" id="ord"></ol><h3>Feuerlöscher und Löschdecke</h3><div class="mc" id="mcq"></div>';
+  const ord=$('#ord');
+  const drawOrd=()=>{ord.innerHTML='';d.order.forEach((k,i)=>{const li=document.createElement('li');li.innerHTML=`<span class="n">${i+1}</span><span>${st.order[k]}</span><span class="mv"><button class="btn ghost small" aria-label="nach oben">▲</button><button class="btn ghost small" aria-label="nach unten">▼</button></span>`;const [u,dn]=li.querySelectorAll('button');u.disabled=i===0;dn.disabled=i===d.order.length-1;u.onclick=()=>{[d.order[i-1],d.order[i]]=[d.order[i],d.order[i-1]];save();drawOrd()};dn.onclick=()=>{[d.order[i+1],d.order[i]]=[d.order[i],d.order[i+1]];save();drawOrd()};ord.appendChild(li)})};
+  drawOrd();
+  const mcq=$('#mcq');
+  st.mc.forEach((q,qi)=>{const div=document.createElement('div');div.className='item';div.innerHTML=`<b>${qi+1}. ${q.q}</b>`+q.o.map((o,oi)=>`<label class="opt"><input type="radio" name="q${qi}" value="${oi}" ${d.mc[qi]===oi?'checked':''}><span>${o}</span></label>`).join('');div.querySelectorAll('input').forEach(r=>r.onchange=()=>{d.mc[qi]=+r.value;save();div.querySelectorAll('.opt').forEach(o=>o.classList.remove('ok','bad'))});mcq.appendChild(div)});
+  $('#check').onclick=()=>{
+    let ok=0,total=st.order.length+st.mc.length;
+    ord.querySelectorAll('li').forEach((li,i)=>{const r=d.order[i]===i;li.className=r?'ok':'bad';if(r)ok++});
+    let unanswered=false;
+    mcq.querySelectorAll('.item').forEach((div,qi)=>{const sel=d.mc[qi];div.querySelectorAll('.opt').forEach((o,oi)=>{o.classList.remove('ok','bad');if(oi===sel)o.classList.add(oi===st.mc[qi].a?'ok':'bad')});if(sel==null)unanswered=true;else if(sel===st.mc[qi].a)ok++});
+    if(unanswered){msg('bad','Bitte beantworte alle Fragen.');return}
+    tried(st,ok,total);
+    if(ok===total) passed(st); else msg('bad',`${ok} von ${total} richtig. Rot markiert = noch falsch. Korrigiere und prüfe nochmals.`);
+  };
+ },
+ match(st,body){
+  const d=D_(st.id); d.sel=d.sel||{};
+  const opts=shuffle(st.options,seedOf(st.id));
+  const wrap=document.createElement('div');wrap.className=(st.id==='ghs'||st.id==='zeichen')?'grid2':'';
+  st.items.forEach(it=>{const div=document.createElement('div');div.className='item';div.id='m-'+it.id;div.innerHTML=`<div class="${st.id==='notruf'?'row':'stack'}"><div>${it.html}</div><div class="grow"><select><option value="">– wählen –</option>${opts.map(o=>`<option ${d.sel[it.id]===o?'selected':''}>${esc(o)}</option>`).join('')}</select></div></div>`;div.querySelector('select').onchange=(e)=>{d.sel[it.id]=e.target.value;div.className='item';save()};wrap.appendChild(div)});
+  if(st.legend){const l=document.createElement('div');l.className='legend';l.textContent=st.legend;body.appendChild(l)}
+  body.appendChild(wrap);
+  if(st.note){const n=document.createElement('div');n.className='msg info';n.textContent=st.note;body.appendChild(n)}
+  let ta;
+  if(st.text){const f=document.createElement('label');f.className='field';f.innerHTML=`<span>${st.text.label}</span><textarea>${esc(d[st.text.id])}</textarea>`;ta=f.querySelector('textarea');ta.oninput=()=>{d[st.text.id]=ta.value;save()};body.appendChild(f)}
+  $('#check').onclick=()=>{
+    let ok=0,empty=0;
+    st.items.forEach(it=>{const v=d.sel[it.id];if(!v)empty++;const r=v===it.a;if(r)ok++;$('#m-'+it.id).className='item '+(v?(r?'ok':'bad'):'')});
+    if(empty){msg('bad','Bitte ordne alle zu.');return}
+    if(st.text&&(d[st.text.id]||'').trim().length<st.text.min){msg('bad','Deine Notfallmeldung ist noch zu kurz. Beantworte alle vier Fragen: Wer? Was? Wo? Wie viele?');return}
+    tried(st,ok,st.items.length);
+    if(ok===st.items.length) passed(st); else msg('bad',`${ok} von ${st.items.length} richtig. Korrigiere die roten und prüfe nochmals.`);
+  };
+ },
+ hunt(st,body){
+  const d=D_(st.id); d.p=d.p||[];
+  const keys=['explosiv','entzuendbar','oxidierend','gas','aetzend','giftig','reizend','gesundheit','umwelt'];
+  body.innerHTML=`<div class="item"><b>1. Foto vom Etikett</b><div class="photo-box" id="hp"></div></div>
+   <label class="field"><span>2. Was ist es und wo hast du es gefunden?</span><input type="text" id="hw" value="${esc(d.where)}" placeholder="z. B. Flasche Ethanol, SimplyNano-Koffer"></label>
+   <div class="item"><b>3. Welche Piktogramme sind drauf? (antippen)</b><div class="grid2" id="hk" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr));margin-top:8px"></div></div>
+   <label class="field"><span>4. Signalwort auf dem Etikett</span><select id="hs"><option value="">– wählen –</option>${['Gefahr','Achtung','kein Signalwort'].map(o=>`<option ${d.signal===o?'selected':''}>${o}</option>`).join('')}</select></label>
+   <label class="field"><span>5. Was musst du beim Arbeiten damit beachten? (Sicherheitshinweis vom Etikett, in eigenen Worten)</span><textarea id="ht">${esc(d.rule)}</textarea></label>`;
+  const hp=$('#hp');const draw=()=>{hp.innerHTML='';if(d.photo){const im=new Image();im.src=d.photo.src;im.alt='Etikett';hp.appendChild(im)}hp.appendChild(photoInput(p=>{d.photo=p;save();draw()}))};draw();
+  const hk=$('#hk');keys.forEach(k=>{const b=document.createElement('button');b.type='button';b.className='item';b.style.cssText='padding:6px;margin:0;cursor:pointer;display:grid;place-items:center';b.innerHTML=pict(k);const upd=()=>{b.className='item'+(d.p.includes(k)?' ok':'')};b.onclick=()=>{d.p=d.p.includes(k)?d.p.filter(x=>x!==k):[...d.p,k];save();upd()};upd();hk.appendChild(b)});
+  $('#hw').oninput=e=>{d.where=e.target.value;save()};$('#hs').onchange=e=>{d.signal=e.target.value;save()};$('#ht').oninput=e=>{d.rule=e.target.value;save()};
+  $('#check').onclick=()=>{
+    const miss=[];if(!d.photo)miss.push('Foto');if((d.where||'').trim().length<4)miss.push('was und wo');if(!d.p.length)miss.push('Piktogramme');if(!d.signal)miss.push('Signalwort');if((d.rule||'').trim().length<10)miss.push('Sicherheitshinweis');
+    if(miss.length){msg('bad','Es fehlt noch: '+miss.join(', ')+'.');return}
+    passed(st);
+  };
+ },
+ errors(st,body){
+  const d=D_(st.id); d.m=d.m||[];
+  const total=st.sents.filter(s=>s.e).length;
+  body.innerHTML='<div class="story" id="story"></div>';
+  const box=$('#story');
+  st.sents.forEach((s,i)=>{const p=document.createElement('span');p.className='sent'+(d.m.includes(i)?' marked':'');p.innerHTML=esc(s.t);p.onclick=()=>{if(S.done[st.id])return;d.m=d.m.includes(i)?d.m.filter(x=>x!==i):[...d.m,i];p.className='sent'+(d.m.includes(i)?' marked':'');save()};box.appendChild(p)});
+  const reveal=()=>{box.querySelectorAll('.sent').forEach((p,i)=>{const s=st.sents[i];if(s.e){p.className='sent ok';p.innerHTML=esc(s.t)+`<span class="why">→ ${esc(s.e)}</span>`}else p.className='sent'})};
+  if(S.done[st.id]) reveal();
+  $('#check').onclick=()=>{
+    const hit=d.m.filter(i=>st.sents[i].e).length, wrong=d.m.filter(i=>!st.sents[i].e).length;
+    tried(st,Math.max(0,hit-wrong),total);
+    if(hit===total&&wrong===0){reveal();passed(st);msg('ok','Alle 14 Fehler gefunden! Lies die grünen Begründungen – genau darum geht es im Labor.');return}
+    let t=`Du hast ${hit} von ${total} Fehlern gefunden.`; if(wrong)t+=` ${wrong} markierte${wrong>1?' Sätze sind':'r Satz ist'} aber in Ordnung – nimm ${wrong>1?'sie':'ihn'} wieder weg.`; if(hit<total)t+=' Such weiter!';
+    msg('bad',t);
+  };
+ },
+ rules(st,body){
+  const d=D_(st.id); d.r=d.r||['','',''];
+  body.innerHTML=[0,1,2].map(i=>`<label class="field"><span>Regel ${i+1}</span><input type="text" data-i="${i}" value="${esc(d.r[i])}"></label>`).join('')+
+   `<div class="item"><label class="chk" style="margin:0"><input type="checkbox" id="commit" ${d.commit?'checked':''}> <span><b>Meine Verpflichtung:</b> Ich halte mich an die Laborregeln unserer Klasse. Ich melde jeden Unfall und jedes Missgeschick sofort der Lehrperson – auch kleine.</span></label></div>`;
+  body.querySelectorAll('input[type=text]').forEach(inp=>inp.oninput=()=>{d.r[+inp.dataset.i]=inp.value;save()});
+  $('#commit').onchange=e=>{d.commit=e.target.checked;save()};
+  $('#check').onclick=()=>{
+    if(d.r.some(r=>r.trim().length<8)){msg('bad','Bitte schreib drei vollständige Regeln.');return}
+    if(!d.commit){msg('bad','Bestätige zuerst deine Verpflichtung.');return}
+    if(!S.finished)S.finished=new Date().toISOString();
+    passed(st);
+  };
+ }
+};
+
+/* ---------- Abschluss ---------- */
+function resultRows(){
+  return STEPS.map(st=>{const sc=S.score[st.id];const t=S.tries[st.id];let r='erledigt';if(sc)r=`${sc.ok}/${sc.total} beim 1. Versuch`+(t>1?` · ${t} Versuche`:'');return {title:st.title,r,done:!!S.done[st.id]}});
+}
+function renderFinish(app){
+  const allDone=STEPS.every(st=>S.done[st.id]);
+  if(!allDone){const first=STEPS.findIndex(st=>!S.done[st.id]);go(first);return}
+  const date=new Date(S.finished||Date.now()).toLocaleDateString('de-CH');
+  app.innerHTML=`<section class="card licence"><div class="stamp">BESTANDEN</div><div class="kicker">Laborführerschein</div><h2>${esc(S.name)}</h2><p class="intro">${esc(S.klasse)} · ${date}</p>
+   <p>hat die Sicherheitsausbildung abgeschlossen und kennt Sicherheitseinrichtungen, Notfallverhalten, Gefahrenpiktogramme und Sicherheitszeichen.</p>
+   <table class="res">${resultRows().map(r=>`<tr><td>${esc(r.title)}</td><td>${r.r}</td></tr>`).join('')}</table>
+   <p style="margin-top:14px;font-size:.92rem;color:var(--muted)">Gültig erst mit Unterschrift der Lehrperson.</p></section>
+   <section class="card"><h2>Abgeben</h2><p class="intro">Lade dein PDF herunter (mit deinen Fotos und Antworten) und lade es dort hoch, wo deine Lehrperson es haben will. Der Dateiname enthält bereits deinen Namen.</p>
+   <div id="msg"></div><div class="actions"><button class="btn ghost" id="back">Zurück</button><span class="spacer"></span><button class="btn okb" id="pdf">📄 PDF herunterladen</button></div>
+   <div class="actions"><button class="btn ghost small" id="reset">Neu beginnen (für die nächste Person)</button></div></section>`;
+  $('#back').onclick=()=>go(STEPS.length-1);
+  $('#pdf').onclick=makePdf;
+  $('#reset').onclick=()=>ask('Neu beginnen?','Alle Antworten und Fotos auf diesem Gerät werden gelöscht. Hast du dein PDF schon heruntergeladen?',()=>{S=fresh();try{localStorage.removeItem(KEY)}catch(e){}render()});
+}
+
+let downloadsP=null;
+try{ if(window.claude&&window.claude.use) downloadsP=window.claude.use('downloads').catch(()=>null) }catch(e){}
+
+function fileName(){return 'Laborfuehrerschein_'+S.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')+'.pdf'}
+
+async function saveBlob(blob,name){
+  if(downloadsP){const dl=await Promise.race([downloadsP,new Promise(r=>setTimeout(()=>r(null),1500))]);if(dl){await dl.save({filename:name,data:blob});return true}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);return true;
+}
+
+async function makePdf(){
+  if(!window.jspdf){msg('bad','Das PDF-Werkzeug konnte nicht geladen werden. Prüfe die Internetverbindung und lade die Seite neu – deine Antworten bleiben gespeichert.');return}
+  const btn=$('#pdf');btn.disabled=true;btn.textContent='PDF wird erstellt …';
+  try{
+    const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
+    const W=210,M=16,CW=W-2*M;let y=M;
+    const need=(h)=>{if(y+h>297-M){doc.addPage();y=M}};
+    const txt=(t,size=10.5,style='normal',color=[29,35,64])=>{doc.setFont('helvetica',style);doc.setFontSize(size);doc.setTextColor(...color);const lines=doc.splitTextToSize(String(t),CW);lines.forEach(l=>{need(size*0.45);doc.text(l,M,y);y+=size*0.45});};
+    const gap=(h=3)=>{y+=h};
+    const h2=(t)=>{gap(4);need(12);doc.setFillColor(238,243,255);doc.roundedRect(M,y-5,CW,8,2,2,'F');txt(t,12.5,'bold');gap(2)};
+    const pics=async(list)=>{let x=M;const pw=(CW-6)/2;let rowH=0;for(const p of list){if(!p||!p.img)continue;const ph=Math.min(pw*p.img.h/p.img.w,70);const w=ph*p.img.w/p.img.h;if(x===M)need(ph+8);doc.addImage(p.img.src,'JPEG',x,y,w,ph);doc.setFontSize(8.5);doc.setTextColor(93,100,130);doc.text(doc.splitTextToSize(p.cap,pw)[0],x,y+ph+4);rowH=Math.max(rowH,ph+7);if(x===M){x=M+pw+6}else{x=M;y+=rowH;rowH=0}}if(x!==M)y+=rowH;};
+
+    txt('Laborführerschein',22,'bold');gap(2);
+    txt(`${S.name} · ${S.klasse}`,13,'bold',[47,109,246]);
+    txt(`Abgeschlossen am ${new Date(S.finished||Date.now()).toLocaleString('de-CH')}`+(S.started?` · begonnen ${new Date(S.started).toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'})}`:''),9.5,'normal',[93,100,130]);
+    h2('Übersicht');
+    resultRows().forEach(r=>txt(`• ${r.title}: ${r.r}`));
+
+    const det=STEPS[0],dd=S.d.detektiv||{};
+    h2('1  Labor-Detektiv – Sicherheitseinrichtungen');
+    det.items.forEach(it=>{const v=dd[it.id]||{};txt(`${it.label}: ${v.none?'gibt es bei uns nicht – stattdessen: ':''}${v.where||''}`)});
+    gap(2);await pics(det.items.map(it=>({img:(dd[it.id]||{}).photo,cap:it.label})));
+
+    const nr=S.d.notruf||{};
+    h2('3  Notfallmeldung');txt(nr.meldung||'');
+
+    const hj=S.d.jagd||{};
+    h2('7  Piktogramm-Jagd');
+    txt(`Gefunden: ${hj.where||''}`);txt(`Signalwort: ${hj.signal||''}`);
+    const names={explosiv:'explosiv',entzuendbar:'entzündbar',oxidierend:'brandfördernd',gas:'Gas unter Druck',aetzend:'ätzend',giftig:'giftig',reizend:'reizend/gesundheitsschädlich',gesundheit:'Gesundheitsgefahr',umwelt:'umweltgefährlich'};
+    txt(`Piktogramme: ${(hj.p||[]).map(k=>names[k]).join(', ')}`);txt(`Das beachte ich: ${hj.rule||''}`);gap(2);
+    await pics([{img:hj.photo,cap:'Etikett'}]);
+
+    const rg=S.d.regeln||{};
+    h2('9  Meine drei wichtigsten Laborregeln');
+    (rg.r||[]).forEach((r,i)=>txt(`${i+1}. ${r}`));
+    gap(3);txt('Ich halte mich an die Laborregeln unserer Klasse und melde jeden Unfall und jedes Missgeschick sofort der Lehrperson.',10,'italic');
+    gap(14);need(20);doc.setDrawColor(29,35,64);doc.line(M,y,M+75,y);doc.line(M+CW-75,y,M+CW,y);y+=5;
+    doc.setFontSize(9);doc.setTextColor(93,100,130);doc.text('Unterschrift Schülerin/Schüler',M,y);doc.text('Unterschrift Lehrperson',M+CW-75,y);
+
+    await saveBlob(doc.output('blob'),fileName());
+    msg('ok','PDF erstellt: <b>'+esc(fileName())+'</b>. Lade es jetzt bei deiner Lehrperson hoch.');
+  }catch(e){msg('bad','Das PDF konnte nicht gespeichert werden. Versuch es nochmals.')}
+  btn.disabled=false;btn.textContent='📄 PDF herunterladen';
+}
+
+render();
+</script>
+</body>
+</html>
