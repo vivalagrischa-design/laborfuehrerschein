@@ -107,6 +107,7 @@ table.res td:last-child{text-align:right;font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(29,35,64,.45);display:grid;place-items:center;padding:16px;z-index:10}
 .modal .card{max-width:420px}
 .hidden{display:none!important}
+.foot{text-align:center;color:var(--muted);font-size:.82rem;font-weight:600;margin-top:22px}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:6px}
 @media (max-width:560px){.card{padding:16px}.pic{width:68px;height:68px}}
 </style>
@@ -120,6 +121,7 @@ table.res td:last-child{text-align:right;font-weight:700}
   </header>
   <div class="progress" id="progress"></div>
   <main id="app"></main>
+  <footer class="foot">© Pascal Manetsch 2026</footer>
 </div>
 <div class="modal hidden" id="modal"><div class="card"><h2 id="mTitle"></h2><p id="mText" class="intro"></p><div class="actions"><button class="btn ghost" id="mNo">Abbrechen</button><span class="spacer"></span><button class="btn" id="mYes">Ja, neu starten</button></div></div></div>
 
@@ -546,6 +548,7 @@ async function buildPdf(){
     gap(14);need(20);doc.setDrawColor(29,35,64);doc.line(M,y,M+75,y);doc.line(M+CW-75,y,M+CW,y);y+=5;
     doc.setFontSize(9);doc.setTextColor(93,100,130);doc.text('Unterschrift Schülerin/Schüler',M,y);doc.text('Unterschrift P. Manetsch',M+CW-75,y);
 
+    const pc=doc.getNumberOfPages();for(let i=1;i<=pc;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(150,155,175);doc.text('© Pascal Manetsch 2026',W/2,290,{align:'center'})}
     return doc.output('blob');
 }
 
@@ -605,6 +608,7 @@ async function buildPng(){
   y=Math.max(y+70,H-200);
   g.strokeStyle='#1d2340';g.lineWidth=3;g.beginPath();g.moveTo(90,y);g.lineTo(480,y);g.moveTo(W-480,y);g.lineTo(W-90,y);g.stroke();
   g.fillStyle='#5d6482';g.font=`600 28px ${F}`;g.fillText('Unterschrift Schüler:in',90,y+42);g.fillText('Unterschrift P. Manetsch',W-480,y+42);
+  g.fillStyle='#9aa2bd';g.font=`600 24px ${F}`;g.textAlign='center';g.fillText('© Pascal Manetsch 2026',W/2,H-62);g.textAlign='left';
   return await new Promise(r=>c.toBlob(r,'image/png'));
 }
 function pngName(){return fileName().replace(/\.pdf$/,'.png')}
