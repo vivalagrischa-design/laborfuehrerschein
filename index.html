@@ -794,6 +794,7 @@ async function savePng(){
 }
 
 async function makePdf(){
+  await checkUpdate();
   if(!window.jspdf){msg('bad',noPdfLib);return}
   const btn=$('#pdf');btn.disabled=true;btn.textContent='PDF wird erstellt …';
   try{
@@ -824,6 +825,22 @@ function testMode(){
 }
 testMode();
 render();
+// ---------- Automatisch neueste Version laden (Fortschritt bleibt gespeichert) ----------
+const APP_VERSION='202611201110';
+async function checkUpdate(){
+  try{
+    if(!/^https?:/.test(location.protocol))return;
+    const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const m=(await r.text()).match(/const APP_VERSION='(\d+)'/);
+    if(m&&m[1]!==APP_VERSION){
+      let last='';try{last=sessionStorage.getItem('lfs-reloaded')||''}catch(e){}
+      if(last===m[1])return; try{sessionStorage.setItem('lfs-reloaded',m[1])}catch(e){}
+      save(); location.reload();
+    }
+  }catch(e){}
+}
+checkUpdate(); setInterval(checkUpdate,3*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
 window.addEventListener('hashchange',()=>{if(location.hash==='#test'){testMode();pdfFile=null;pdfReady=null;pngFile=null;render();window.scrollTo({top:0})}});
 </script>
 </body>
