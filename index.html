@@ -34,7 +34,8 @@ header.top .logo{width:46px;height:46px;flex:none;border-radius:14px;object-fit:
 header.top h1{font-size:1.25rem;margin:0;font-weight:900;letter-spacing:-.01em;line-height:1.1}
 header.top .restart{border:0;background:none;color:var(--muted);font-weight:700;font-size:.82rem;cursor:pointer;padding:2px 0;text-decoration:underline}
 header.top .sub{font-size:.82rem;font-weight:700;color:#c27a00}
-header.top .who{margin-left:auto;font-size:.9rem;color:var(--muted);text-align:right}
+header.top .who{margin-left:auto;font-size:.82rem;color:var(--muted);text-align:right;max-width:40%;line-height:1.3}
+header.top .who .nm{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .progress{display:flex;gap:5px;margin:4px 0 18px}
 .progress span{flex:1;height:9px;border-radius:9px;background:var(--line)}
 .progress span.done{background:var(--ok)}
@@ -107,6 +108,26 @@ table.res td:last-child{text-align:right;font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(29,35,64,.45);display:grid;place-items:center;padding:16px;z-index:10}
 .modal .card{max-width:420px}
 .hidden{display:none!important}
+.memstat{display:flex;justify-content:space-between;font-weight:700;color:var(--muted);margin:6px 0 10px}
+.mem{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(min-width:560px){.mem{grid-template-columns:repeat(6,1fr)}}
+.mcard{position:relative;aspect-ratio:1/1;border:0;padding:0;background:none;cursor:pointer;perspective:600px}
+.mcard .back,.mcard .front{position:absolute;inset:0;border-radius:14px;display:grid;place-items:center;backface-visibility:hidden;transition:transform .35s}
+.mcard .back{background:linear-gradient(135deg,#1f2433,#3a4160);box-shadow:0 3px 0 #000}
+.mcard .back img{width:46%;border-radius:50%;opacity:.9}
+.mcard .front{background:#fff;border:2px solid var(--line);transform:rotateY(180deg);padding:4px}
+.mcard .front svg{width:80%;height:80%}
+.mcard .mtxt{font-weight:800;font-size:.74rem;line-height:1.12;text-align:center;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:anywhere;padding:0 2px}
+.mcard.up .back,.mcard.done .back{transform:rotateY(180deg)}
+.mcard.up .front,.mcard.done .front{transform:rotateY(0)}
+.mcard.done .front{border-color:var(--ok);background:var(--ok-bg)}
+.tprog{height:8px;background:var(--line);border-radius:8px;overflow:hidden;margin:6px 0 8px}.tprog span{display:block;height:100%;background:var(--accent)}
+.tres{display:flex;gap:14px;align-items:center;border-radius:16px;padding:14px;margin:8px 0}
+.tres img{width:90px;height:90px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px #fff;flex:none}
+.tres.pass{background:var(--ok-bg);color:#14663a}.tres.fail{background:var(--bad-bg);color:#9b2c2c}
+.tres .big{font-size:2rem;font-weight:900;line-height:1}
+.ltest{display:flex;justify-content:space-between;align-items:center;background:#fff;border:2px solid var(--ok);border-radius:14px;padding:10px 14px;margin:12px 0 4px;font-weight:800}
+.ltest .big{font-size:1.4rem;font-weight:900;color:var(--ok)}
 .foot{text-align:center;color:var(--muted);font-size:.82rem;font-weight:600;margin-top:22px}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:6px}
 @media (max-width:560px){.card{padding:16px}.pic{width:68px;height:68px}}
@@ -212,8 +233,8 @@ const STEPS = [
    {id:'schluck', html:'Chemikalie <b>verschluckt</b>', a:'Mund ausspülen, nicht erbrechen, Tox Info 145 anrufen'}
   ],
   note:'Bei jedem Unfall gilt zusätzlich: sofort die Lehrperson informieren – auch bei Kleinigkeiten.'},
- {id:'ghs', kicker:'Schritt 5', title:'Gefahrenpiktogramme', time:'5 Min.', type:'match',
-  intro:'Diese roten Rauten findest du auf Chemikalien – im Labor und zu Hause. Was bedeuten sie?',
+ {id:'ghs', kicker:'Schritt 5', title:'Piktogramm-Memory', time:'6 Min.', type:'memory',
+  intro:'Diese roten Rauten findest du auf Chemikalien – im Labor und zu Hause. Finde die Paare: Piktogramm und Bedeutung. Wer schafft es mit den wenigsten Zügen?',
   options:['explosiv','entzündbar','brandfördernd','Gas unter Druck','ätzend','giftig (schon kleine Mengen)','reizend / gesundheitsschädlich','langfristige Gesundheitsgefahr','umweltgefährlich'],
   items:[
    {id:'entzuendbar', html:pict('entzuendbar'), a:'entzündbar'},
@@ -263,8 +284,34 @@ const STEPS = [
    {t:'Ohne die Hände zu waschen, gehen sie in die Pause.', e:'Nach dem Experimentieren immer die Hände waschen.'}
   ]},
  {id:'regeln', kicker:'Schritt 9', title:'Meine Laborregeln', time:'4 Min.', type:'rules',
-  intro:'Was nimmst du mit? Schreib die drei Regeln auf, die du am wichtigsten findest – in eigenen Worten und positiv formuliert («Ich trage …»).'}
+  intro:'Was nimmst du mit? Schreib die drei Regeln auf, die du am wichtigsten findest – in eigenen Worten und positiv formuliert («Ich trage …»).'},
+ {id:'test', kicker:'Schlusstest', title:'Schlusstest', time:'8 Min.', type:'test',
+  intro:'Jetzt zeigst du, was du gelernt hast. 15 Fragen, ohne Hilfe und ohne Zurück. Zum Bestehen brauchst du mindestens 12 richtige (80 %). Erst am Schluss siehst du die Auswertung.'}
 ];
+const PASS_RATE=0.8, TEST_LEN=15;
+// Fragenpool für den Schlusstest (erste Antwort = richtig; wird gemischt)
+const TEST_POOL=[
+ {q:'Bei welcher Nummer erreichst du Tox Info Suisse, wenn jemand eine Chemikalie verschluckt hat?', o:['145','144','118','117']},
+ {q:'Es brennt im Labor. Welche Nummer erreicht die Feuerwehr?', o:['118','144','117','145']},
+ {q:'Was ist bei einem Brand der erste Schritt?', o:['Alarmieren: laut rufen, Lehrperson holen','Sofort selbst löschen','Zuerst die Sachen zusammenpacken','Das Fenster öffnen']},
+ {q:'Wohin richtest du den Strahl des Feuerlöschers?', o:['Auf den Brandherd, unten','Auf die Spitze der Flammen','In die Luft über dem Feuer','Auf die Wand hinter dem Feuer']},
+ {q:'Die Kleidung einer Person brennt. Was ist richtig?', o:['Person hinlegen, Löschdecke auflegen und andrücken','Person zum Wasserhahn rennen lassen','Mit Wasser aus dem Becherglas löschen','Das Fenster öffnen, damit der Rauch abzieht']},
+ {q:'Wie lange spülst du ein Auge nach einem Chemikalienspritzer mindestens?', o:['10–15 Minuten','10 Sekunden','1 Minute','Gar nicht, nur reiben']},
+ {q:'Was tust du bei einer Verbrennung am heissen Glas?', o:['10–20 Minuten unter fliessendem, nicht eiskaltem Wasser kühlen','Eis direkt auf die Haut legen','Salbe drauf und weiterarbeiten','Nichts – das geht von selbst weg']},
+ {q:'Jemand hat eine Chemikalie verschluckt. Was darfst du NICHT tun?', o:['Erbrechen auslösen','Lehrperson holen','Tox Info 145 anrufen','Mund ausspülen lassen']},
+ {q:'Wie verdünnst du eine Säure richtig?', o:['Erst das Wasser, dann die Säure','Erst die Säure, dann das Wasser','Beides gleichzeitig schnell zusammenkippen','Es spielt keine Rolle']},
+ {q:'Wie machst du eine Geruchsprobe?', o:['Dämpfe mit der Hand zufächeln','Direkt am Glas tief einatmen','Das Glas an die Nase halten','Gar nicht riechen – probieren']},
+ {q:'Du erhitzt ein Reagenzglas. Wohin zeigt die Öffnung?', o:['Weg von allen Personen','Zu mir, damit ich hineinsehen kann','Zum Nachbarn','Egal, Hauptsache der Brenner läuft']},
+ {q:'Was machst du mit Chemikalienresten?', o:['Nach Anweisung der Lehrperson entsorgen','Zurück in die Vorratsflasche giessen','In den Ausguss leeren','In den Papierkorb werfen']},
+ {q:'Wann trägst du die Schutzbrille?', o:['Während des ganzen Experiments, auch beim Aufräumen','Nur wenn es gefährlich aussieht','Nur beim Anzünden des Brenners','Um den Hals reicht']},
+ {q:'Welches Signalwort steht für die grössere Gefahr?', o:['Gefahr','Achtung','Vorsicht','Hinweis']},
+ {q:'Der Feueralarm geht los. Was ist richtig?', o:['Ruhig dem Fluchtweg folgen und zum Sammelplatz gehen','Den Lift nehmen, das geht schneller','Zurück ins Zimmer, um das Handy zu holen','Im Zimmer bleiben und warten']},
+ {q:'Ein Reagenzglas zerbricht. Was tust du?', o:['Lehrperson informieren, Scherben mit Handfeger in den Glasabfall','Scherben mit den Händen aufsammeln','Scherben in den Papierkorb werfen','Liegen lassen']},
+ {q:'Lange Haare beim Experimentieren …', o:['… binde ich zusammen','… lasse ich offen','… stecke ich unter die Schutzbrille','… spielen keine Rolle']},
+ {q:'Du hast einen kleinen Spritzer Säure auf der Hand. Was tust du?', o:['Sofort mit viel Wasser spülen und Lehrperson informieren','Am Ärmel abwischen','Nichts sagen, ist ja nur wenig','Mit dem Mund wegblasen']}
+];
+const GHS_NAMES={explosiv:'explosiv',entzuendbar:'entzündbar',oxidierend:'brandfördernd',gas:'Gas unter Druck',aetzend:'ätzend',giftig:'giftig (schon kleine Mengen)',reizend:'reizend / gesundheitsschädlich',gesundheit:'langfristige Gesundheitsgefahr',umwelt:'umweltgefährlich'};
+const SIGN_NAMES={verbot:'Verbot: Das darf ich nicht.',gebot:'Gebot: Das muss ich tun.',warn:'Warnung: Achtung, Gefahr!',rettung:'Rettung: Hier gibt es Hilfe / den Weg hinaus.',brand:'Brandschutz: Hier ist Löschmaterial.'};
 
 /* ---------- Zustand ---------- */
 const KEY='laborfuehrerschein-v1';
@@ -280,13 +327,13 @@ function seedOf(str){let h=(S.seed||7);for(const c of str)h=(h*31+c.charCodeAt(0
 // Persönliche Reihenfolge der Schritte: 1–8 gemischt, «Meine Laborregeln» immer zuletzt
 function ensureOrder(){
   if(!S.seed) S.seed=1+Math.floor(Math.random()*99999);
-  if(!S.order||S.order.length!==STEPS.length){const last=STEPS.length-1;S.order=[...shuffle([...Array(last).keys()],seedOf('steps')),last]}
+  if(!S.order||S.order.length!==STEPS.length){const n=STEPS.length-2;S.order=[...shuffle([...Array(n).keys()],seedOf('steps')),n,n+1]}
 }
 const cur=()=>STEPS[S.order[S.step]];
 const mix=(arr,key)=>shuffle(arr,seedOf(key));
 
 function header(){
-  $('#who').innerHTML = S.name ? `${esc(S.name)} · ${esc(S.klasse)}<br><button class="restart" id="restart">↺ Neu starten</button>` : '';
+  $('#who').innerHTML = S.name ? `<span class="nm">${esc(S.name)}</span><span class="nm">${esc(S.klasse)}</span><button class="restart" id="restart">↺ Neu starten</button>` : '';
   if($('#restart')) $('#restart').onclick=resetAll;
   const p=$('#progress'); p.innerHTML='';
   if(S.step<0){p.classList.add('hidden');return} p.classList.remove('hidden');
@@ -314,7 +361,7 @@ function msg(type,html){$('#msg').innerHTML=`<div class="msg ${type}">${html}</d
 function passed(st,silent){
   S.done[st.id]=true; save(); header();
   $('#check').classList.add('hidden'); $('#next').classList.remove('hidden');
-  $('#next').textContent = S.step===STEPS.length-1 ? 'Zum Laborführerschein' : 'Weiter';
+  $('#next').textContent = S.step===STEPS.length-1 ? 'Zum Laborführerschein' : (S.order[S.step+1]===STEPS.length-1 ? 'Zum Schlusstest' : 'Weiter');
   if(!silent) win('Super, alles richtig! Weiter geht\'s.');
   else if(!$('#msg').innerHTML) msg('ok','Erledigt ✓ – du kannst noch etwas ändern oder weitergehen.');
 }
@@ -449,6 +496,71 @@ const RENDER = {
     msg('bad',t);
   };
  },
+ memory(st,body){
+  const d=D_(st.id); d.m=d.m||[]; d.moves=d.moves||0;
+  const cards=mix([...st.items.map(it=>({id:it.id,kind:'pic'})),...st.items.map(it=>({id:it.id,kind:'txt'}))],'mem');
+  $('#check').classList.add('hidden');
+  body.innerHTML=`<div class="memstat"><span>Züge: <b id="moves">${d.moves}</b></span><span>Paare: <b id="pairs">${d.m.length}</b>/${st.items.length}</span></div><div class="mem" id="mem"></div>`;
+  const box=$('#mem'); let open=[]; let lock=false;
+  cards.forEach((c,i)=>{
+    const it=st.items.find(x=>x.id===c.id);
+    const el=document.createElement('button');el.type='button';el.className='mcard'+(d.m.includes(c.id)?' done':'');
+    el.innerHTML=`<span class="back"><img src="${TUEB_HEAD}" alt=""></span><span class="front">${c.kind==='pic'?pict(c.id):'<span class="mtxt">'+esc(it.a)+'</span>'}</span>`;
+    el.onclick=()=>{
+      if(lock||S.done[st.id]&&d.m.length===st.items.length||el.classList.contains('done')||el.classList.contains('up'))return;
+      el.classList.add('up');open.push({el,c});
+      if(open.length===2){
+        d.moves++;$('#moves').textContent=d.moves;
+        const [a,b]=open;open=[];
+        if(a.c.id===b.c.id&&a.c.kind!==b.c.kind){
+          a.el.classList.add('done');b.el.classList.add('done');d.m.push(a.c.id);$('#pairs').textContent=d.m.length;save();
+          if(d.m.length===st.items.length){S.score[st.id]={r:`9 Paare in ${d.moves} Zügen`,moves:d.moves};passed(st,true);win(`Alle 9 Paare in ${d.moves} Zügen gefunden! (Bestmöglich wären 9.)`)}
+        }else{lock=true;setTimeout(()=>{a.el.classList.remove('up');b.el.classList.remove('up');lock=false},950);save()}
+      }
+    };
+    box.appendChild(el);
+  });
+  if(d.m.length===st.items.length&&!S.done[st.id]) passed(st,true);
+ },
+ test(st,body){
+  const d=D_(st.id); d.hist=d.hist||[];
+  $('#check').classList.add('hidden'); if($('#back')) $('#back').classList.add('hidden');
+  const build=()=>{
+    const att=(d.hist.length+1);const sd=k=>seedOf('t'+att+k);
+    const ghsKeys=shuffle(Object.keys(GHS_NAMES),sd('g')).slice(0,3);
+    const signKeys=shuffle(Object.keys(SIGN_NAMES),sd('s')).slice(0,2);
+    const qs=[];
+    ghsKeys.forEach(k=>{const wrong=shuffle(Object.keys(GHS_NAMES).filter(x=>x!==k),sd('gw'+k)).slice(0,3).map(x=>GHS_NAMES[x]);qs.push({q:'Was bedeutet dieses Gefahrenpiktogramm?',pic:'ghs:'+k,opts:shuffle([GHS_NAMES[k],...wrong],sd('go'+k)),a:GHS_NAMES[k]})});
+    signKeys.forEach(k=>{const wrong=shuffle(Object.keys(SIGN_NAMES).filter(x=>x!==k),sd('sw'+k)).slice(0,3).map(x=>SIGN_NAMES[x]);qs.push({q:'Was bedeutet ein Sicherheitszeichen mit dieser Form und Farbe?',pic:'sign:'+k,opts:shuffle([SIGN_NAMES[k],...wrong],sd('so'+k)),a:SIGN_NAMES[k]})});
+    shuffle(TEST_POOL.map((_,i)=>i),sd('p')).slice(0,TEST_LEN-qs.length).forEach(i=>{const t=TEST_POOL[i];qs.push({q:t.q,opts:shuffle(t.o,sd('o'+i)),a:t.o[0]})});
+    d.qs=shuffle(qs,sd('order'));d.ans=[];d.i=0;d.res=null;save();
+  };
+  const picHtml=pk=>{if(!pk)return'';const [t,k]=pk.split(':');return `<div style="text-align:center;margin:6px 0">${t==='ghs'?pict(k):sign(k)}</div>`};
+  const showQ=()=>{
+    const q=d.qs[d.i];
+    body.innerHTML=`<div class="tprog"><span style="width:${Math.round(d.i/d.qs.length*100)}%"></span></div><div class="m" style="font-weight:800;color:var(--muted)">Frage ${d.i+1} von ${d.qs.length}</div>
+     <div class="item"><b style="font-size:1.08rem">${esc(q.q)}</b>${picHtml(q.pic)}<div class="mc">${q.opts.map((o,oi)=>`<label class="opt"><input type="radio" name="tq" value="${oi}" ${d.ans[d.i]===o?'checked':''}><span>${esc(o)}</span></label>`).join('')}</div></div>
+     <div class="actions"><span class="spacer"></span><button class="btn" id="tnext" ${d.ans[d.i]==null?'disabled':''}>${d.i===d.qs.length-1?'Test abgeben':'Nächste Frage'}</button></div>`;
+    body.querySelectorAll('input').forEach(r=>r.onchange=()=>{d.ans[d.i]=q.opts[+r.value];save();$('#tnext').disabled=false});
+    $('#tnext').onclick=()=>{if(d.ans[d.i]==null)return;if(d.i<d.qs.length-1){d.i++;save();showQ();window.scrollTo({top:0})}else finish()};
+  };
+  const finish=()=>{
+    const ok=d.qs.filter((q,i)=>d.ans[i]===q.a).length,total=d.qs.length,pass=ok>=Math.ceil(total*PASS_RATE);
+    d.res={ok,total,pass,at:new Date().toISOString(),qs:d.qs,ans:d.ans};d.hist.push({ok,total,pass,at:d.res.at});
+    if(pass){S.score[st.id]={ok,total,r:`${ok}/${total} richtig (${Math.round(ok/total*100)} %)`+(d.hist.length>1?` · ${d.hist.length}. Versuch`:'')};}
+    save();showRes();window.scrollTo({top:0});
+  };
+  const showRes=()=>{
+    const r=d.res;const pct=Math.round(r.ok/r.total*100);
+    body.innerHTML=`<div class="tres ${r.pass?'pass':'fail'}"><img src="${r.pass?TUEB_OK:TUEB_HEAD}" alt="Tübi"><div><div class="big">${r.ok} / ${r.total}</div><div>${pct} % richtig · ${r.pass?'bestanden ✓':'noch nicht bestanden'}</div>${d.hist.length>1?`<div class="m">Versuch ${d.hist.length} (vorher: ${d.hist.slice(0,-1).map(h=>h.ok+'/'+h.total).join(', ')})</div>`:''}</div></div>
+     <h3>Deine Auswertung</h3>`+r.qs.map((q,i)=>{const good=r.ans[i]===q.a;return `<div class="item ${good?'ok':'bad'}"><b>${good?'✓':'✗'} ${esc(q.q)}</b>${q.pic?picHtml(q.pic).replace('<div style="text-align:center;margin:6px 0">','<div style="margin:4px 0">'):''}<div class="m">Deine Antwort: ${esc(r.ans[i])}</div>${good?'':`<div class="m" style="color:#14663a;font-weight:800">Richtig: ${esc(q.a)}</div>`}</div>`}).join('')+
+     (r.pass?'':`<div class="msg bad">Du brauchst mindestens ${Math.ceil(r.total*PASS_RATE)} richtige. Lies die roten Antworten nochmals durch und versuch es erneut – du bekommst neue Fragen.</div><div class="actions"><span class="spacer"></span><button class="btn" id="retry">Test nochmals machen</button></div>`);
+    if(r.pass){passed(st,true);win('Schlusstest bestanden! Hol dir jetzt deinen Laborführerschein.')}
+    else $('#retry').onclick=()=>{build();showQ();window.scrollTo({top:0})};
+  };
+  if(d.res&&(d.res.pass||d.ans.length===d.qs.length)) showRes();
+  else{ if(!d.qs) build(); showQ(); }
+ },
  rules(st,body){
   const d=D_(st.id); d.r=d.r||['','',''];
   body.innerHTML=[0,1,2].map(i=>`<label class="field"><span>Regel ${i+1}</span><input type="text" data-i="${i}" value="${esc(d.r[i])}"></label>`).join('')+
@@ -466,14 +578,14 @@ const RENDER = {
 
 /* ---------- Abschluss ---------- */
 function resultRows(){
-  return STEPS.map(st=>{const sc=S.score[st.id];const t=S.tries[st.id];let r='erledigt';if(sc)r=`${sc.ok}/${sc.total} beim 1. Versuch`+(t>1?` · ${t} Versuche`:'');return {title:st.title,r,done:!!S.done[st.id]}});
+  return STEPS.map(st=>{const sc=S.score[st.id];const t=S.tries[st.id];let r='erledigt';if(sc&&sc.r)r=sc.r;else if(sc)r=`${sc.ok}/${sc.total} beim 1. Versuch`+(t>1?` · ${t} Versuche`:'');return {title:st.title,r,done:!!S.done[st.id]}});
 }
 function renderFinish(app){
   const allDone=STEPS.every(st=>S.done[st.id]);
   if(!allDone){const first=S.order.findIndex(k=>!S.done[STEPS[k].id]);go(first);return}
   const date=new Date(S.finished||Date.now()).toLocaleDateString('de-CH');
   app.innerHTML=`${S.test?'<div class="msg info" style="margin:0 0 14px">Testmodus: Beispiel-Führerschein zum Ausprobieren von Teilen, Bild und PDF. Nichts wird gespeichert.</div>':''}<section class="card licence"><div class="lhead"><div class="grow"><div class="kicker">Laborführerschein NT · OSMP</div><h2>${esc(S.name)}</h2><p class="intro" style="margin:2px 0">${esc(S.klasse)} · ${date}</p><div class="stamp">BESTANDEN</div></div><img class="tueb" src="${TUEB_OK}" alt="Tübi zeigt Daumen hoch"></div>
-   <p>hat die Sicherheitsausbildung abgeschlossen und kennt Sicherheitseinrichtungen, Notfallverhalten, Gefahrenpiktogramme und Sicherheitszeichen.</p>
+   <p>hat die Sicherheitsausbildung abgeschlossen und kennt Sicherheitseinrichtungen, Notfallverhalten, Gefahrenpiktogramme und Sicherheitszeichen.</p>${(()=>{const t=(S.d.test||{}).res;return t?`<div class="ltest"><span>Schlusstest</span><span class="big">${t.ok}/${t.total} · ${Math.round(t.ok/t.total*100)} %</span></div>`:''})()}
    <table class="res">${resultRows().map(r=>`<tr><td>${esc(r.title)}</td><td>${r.r}</td></tr>`).join('')}</table>
    <p style="margin-top:14px;font-size:.92rem;color:var(--muted)">Gültig erst mit Unterschrift von P. Manetsch.</p></section>
    <section class="card"><h2>Führerschein abgeben</h2>${tuebSay('Schick dein PDF per Mail an P. Manetsch – und wenn du willst, auch an dich selbst. Am Laptop kannst du es dann ausdrucken.')}
@@ -541,6 +653,14 @@ async function buildPdf(){
     txt(`Piktogramme: ${(hj.p||[]).map(k=>names[k]).join(', ')}`);txt(`Das beachte ich: ${hj.rule||''}`);gap(2);
     await pics([{img:hj.photo,cap:'Etikett'}]);
 
+    const tr=(S.d.test||{}).res;
+    if(tr){
+      h2(`Schlusstest – ${tr.ok}/${tr.total} richtig (${Math.round(tr.ok/tr.total*100)} %) · ${tr.pass?'bestanden':'nicht bestanden'}`);
+      const hs=(S.d.test.hist||[]);if(hs.length>1)txt('Versuche: '+hs.map((h,i)=>`${i+1}. ${h.ok}/${h.total}`).join(' · '),9.5,'normal',[93,100,130]);
+      tr.qs.forEach((q,i)=>{const good=tr.ans[i]===q.a;const pk=q.pic?(q.pic.startsWith('ghs:')?' [Piktogramm: '+GHS_NAMES[q.pic.slice(4)]+']':' [Zeichen]'):'';
+        txt(`${i+1}. ${q.q}${pk}  –  ${good?'RICHTIG':'FALSCH'}`,10,'bold',good?[20,102,58]:[155,44,44]);
+        txt(`     Antwort: ${tr.ans[i]}`+(good?'':`   ·   richtig: ${q.a}`),9.5,'normal',[60,66,98]);gap(1)});
+    }
     const rg=S.d.regeln||{};
     h2('Meine drei wichtigsten Laborregeln');
     (rg.r||[]).forEach((r,i)=>txt(`${i+1}. ${r}`));
@@ -578,7 +698,7 @@ let pngFile=null;
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 function wrapText(ctx,text,x,y,maxW,lh){const words=String(text).split(' ');let line='';for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){ctx.fillText(line,x,y);y+=lh;line=w}else line=t}if(line){ctx.fillText(line,x,y);y+=lh}return y}
 async function buildPng(){
-  const W=1080,H=1520,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const W=1080,H=1640,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
   const F='Nunito, system-ui, sans-serif';
   try{await document.fonts.ready}catch(e){}
   // Hintergrund und Rahmen
@@ -645,12 +765,18 @@ function testMode(){
   ex.score={brand:{ok:8,total:9},notruf:{ok:5,total:5},erstehilfe:{ok:4,total:5},ghs:{ok:7,total:9},zeichen:{ok:5,total:5},fehler:{ok:13,total:14}};
   ex.tries={brand:2,erstehilfe:2,ghs:2,fehler:2};
   const det={};STEPS[0].items.forEach(it=>det[it.id]={where:'Beispiel: neben der Tür',none:false});
+  const tq=[{q:'Bei welcher Nummer erreichst du Tox Info Suisse?',opts:['145','144','118','117'],a:'145'},{q:'Wie verdünnst du eine Säure richtig?',opts:['Erst das Wasser, dann die Säure','Erst die Säure, dann das Wasser'],a:'Erst das Wasser, dann die Säure'},{q:'Was bedeutet dieses Gefahrenpiktogramm?',pic:'ghs:aetzend',opts:['ätzend','explosiv'],a:'ätzend'}];
+  const tAns=['145','Erst die Säure, dann das Wasser','ätzend'];
+  ex.score.test={ok:13,total:15,r:'13/15 richtig (87 %)'};
+  ex.d_test={hist:[{ok:13,total:15,pass:true}],res:{ok:13,total:15,pass:true,qs:tq,ans:tAns}};
   ex.d={detektiv:det,notruf:{meldung:'Beispiel-Notfallmeldung: Wer, was, wo, wie viele.'},jagd:{where:'Beispiel-Etikett',signal:'Achtung',p:['reizend'],rule:'Beispiel-Sicherheitshinweis'},regeln:{r:['Ich trage die Schutzbrille.','Ich esse und trinke nicht im Labor.','Ich melde jeden Unfall sofort.'],commit:true}};
+  ex.d.test=ex.d_test;delete ex.d_test;ex.d.ghs={m:STEPS.find(x=>x.id==='ghs').items.map(i=>i.id),moves:14};ex.score.ghs={r:'9 Paare in 14 Zügen'};
   S=ex; S.order=[...Array(STEPS.length).keys()]; S.step=STEPS.length;
   try{history.replaceState(null,'',location.pathname)}catch(e){}
 }
 testMode();
 render();
+window.addEventListener('hashchange',()=>{if(location.hash==='#test'){testMode();pdfFile=null;pdfReady=null;pngFile=null;render();window.scrollTo({top:0})}});
 </script>
 </body>
 </html>
