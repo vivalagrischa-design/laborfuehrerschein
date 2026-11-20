@@ -268,7 +268,7 @@ const KEY='laborfuehrerschein-v1';
 let S = load() || fresh();
 function fresh(){return {name:'',klasse:'',step:-1,done:{},tries:{},score:{},d:{},started:null,finished:null}}
 function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){/* Speicher voll oder nicht verfügbar */}}
+function save(){if(S.test)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){/* Speicher voll oder nicht verfügbar */}}
 const D_ = (id)=> (S.d[id] = S.d[id] || {});
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = (t)=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -289,7 +289,7 @@ function header(){
   if(S.step<0){p.classList.add('hidden');return} p.classList.remove('hidden');
   S.order.forEach((k,i)=>{const st=STEPS[k];const s=document.createElement('span');if(S.done[st.id])s.className='done';if(i===S.step)s.className='cur';p.appendChild(s)});
 }
-function resetAll(){ask('Neu starten?','Alle Antworten und Fotos auf diesem Gerät werden gelöscht, und man beginnt wieder beim Anmelden. Wer fertig ist: Zuerst das PDF verschicken!',()=>{S=fresh();try{localStorage.removeItem(KEY)}catch(e){}pdfFile=null;pdfReady=null;render();window.scrollTo({top:0})})}
+function resetAll(){ask('Neu starten?','Alle Antworten und Fotos auf diesem Gerät werden gelöscht, und man beginnt wieder beim Anmelden. Wer fertig ist: Zuerst das PDF verschicken!',()=>{S=fresh();try{localStorage.removeItem(KEY)}catch(e){}pdfFile=null;pdfReady=null;pngFile=null;render();window.scrollTo({top:0})})}
 function go(i){S.step=i;save();render();window.scrollTo({top:0,behavior:'smooth'})}
 function ask(title,text,onYes){const m=$('#modal');$('#mTitle').textContent=title;$('#mText').textContent=text;m.classList.remove('hidden');$('#mYes').onclick=()=>{m.classList.add('hidden');onYes()};$('#mNo').onclick=()=>m.classList.add('hidden')}
 
@@ -469,16 +469,18 @@ function renderFinish(app){
   const allDone=STEPS.every(st=>S.done[st.id]);
   if(!allDone){const first=S.order.findIndex(k=>!S.done[STEPS[k].id]);go(first);return}
   const date=new Date(S.finished||Date.now()).toLocaleDateString('de-CH');
-  app.innerHTML=`<section class="card licence"><div class="lhead"><div class="grow"><div class="kicker">Laborführerschein NT · OSMP</div><h2>${esc(S.name)}</h2><p class="intro" style="margin:2px 0">${esc(S.klasse)} · ${date}</p><div class="stamp">BESTANDEN</div></div><img class="tueb" src="${TUEB_OK}" alt="Tübi zeigt Daumen hoch"></div>
+  app.innerHTML=`${S.test?'<div class="msg info" style="margin:0 0 14px">Testmodus: Beispiel-Führerschein zum Ausprobieren von Teilen, Bild und PDF. Nichts wird gespeichert.</div>':''}<section class="card licence"><div class="lhead"><div class="grow"><div class="kicker">Laborführerschein NT · OSMP</div><h2>${esc(S.name)}</h2><p class="intro" style="margin:2px 0">${esc(S.klasse)} · ${date}</p><div class="stamp">BESTANDEN</div></div><img class="tueb" src="${TUEB_OK}" alt="Tübi zeigt Daumen hoch"></div>
    <p>hat die Sicherheitsausbildung abgeschlossen und kennt Sicherheitseinrichtungen, Notfallverhalten, Gefahrenpiktogramme und Sicherheitszeichen.</p>
    <table class="res">${resultRows().map(r=>`<tr><td>${esc(r.title)}</td><td>${r.r}</td></tr>`).join('')}</table>
    <p style="margin-top:14px;font-size:.92rem;color:var(--muted)">Gültig erst mit Unterschrift von P. Manetsch.</p></section>
    <section class="card"><h2>Führerschein verschicken</h2>${tuebSay('Schick dir dein PDF selbst – per Mail oder WhatsApp. Am Laptop öffnest du es, druckst den Führerschein aus und gibst ihn P. Manetsch zum Unterschreiben.')}
    <ol class="intro" style="padding-left:20px;margin:8px 0 0"><li>Tippe auf <b>Per Mail oder WhatsApp senden</b>.</li><li><b>Mail:</b> Mail-App wählen und die gewünschte Adresse eingeben.<br><b>WhatsApp:</b> den Chat mit dir selbst wählen («Du» / deine eigene Nummer).</li><li>Am Laptop: Mail oder WhatsApp Web öffnen → PDF öffnen → drucken.</li></ol>
-   <div id="msg"></div><div class="actions"><button class="btn ghost" id="back">Zurück</button><span class="spacer"></span><button class="btn ghost" id="pdf">📄 PDF herunterladen</button><button class="btn okb" id="share">📤 Per Mail oder WhatsApp senden</button></div>
+   <p class="intro" style="font-size:.92rem">Nur den Führerschein fürs Handy? <b>Als Bild speichern</b> legt ihn in deine Fotos (ohne deine Fotos aus Schritt 1 und 7 – die sind nur im PDF).</p>
+   <div id="msg"></div><div class="actions"><button class="btn ghost" id="back">Zurück</button><span class="spacer"></span><button class="btn ghost" id="png">🖼️ Als Bild speichern</button><button class="btn ghost" id="pdf">📄 PDF herunterladen</button><button class="btn okb" id="share">📤 Per Mail oder WhatsApp senden</button></div>
    <div class="actions"><button class="btn ghost small" id="reset">Neu beginnen (für die nächste Person)</button></div></section>`;
   $('#back').onclick=()=>go(STEPS.length-1);
   $('#pdf').onclick=makePdf;
+  $('#png').onclick=savePng; pngFile=null; buildPng().then(b=>{ if(b) pngFile=new File([b],pngName(),{type:'image/png'}) }).catch(()=>{});
   const sh=$('#share');
   if(canShareFiles()){
     sh.onclick=sharePdf; sh.disabled=true; sh.textContent='PDF wird vorbereitet …';
@@ -562,6 +564,58 @@ async function sharePdf(){
   }
 }
 
+
+// ---------- Führerschein als Bild (PNG) ----------
+let pngFile=null;
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+function wrapText(ctx,text,x,y,maxW,lh){const words=String(text).split(' ');let line='';for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){ctx.fillText(line,x,y);y+=lh;line=w}else line=t}if(line){ctx.fillText(line,x,y);y+=lh}return y}
+async function buildPng(){
+  const W=1080,H=1520,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const F='Nunito, system-ui, sans-serif';
+  try{await document.fonts.ready}catch(e){}
+  // Hintergrund und Rahmen
+  const grad=g.createLinearGradient(0,0,W,H);grad.addColorStop(0,'#fffdf3');grad.addColorStop(1,'#eef4ff');
+  g.fillStyle='#f4f6fb';g.fillRect(0,0,W,H);
+  g.fillStyle=grad;g.strokeStyle='#1d2340';g.lineWidth=8;
+  g.beginPath();g.roundRect(30,30,W-60,H-60,40);g.fill();g.stroke();
+  // Tübi
+  try{const t=await loadImg(TUEB_OK);g.save();g.beginPath();g.arc(W-190,200,120,0,Math.PI*2);g.closePath();g.fillStyle='#fff';g.fill();g.clip();g.drawImage(t,W-310,80,240,240);g.restore();g.lineWidth=8;g.strokeStyle='#fff';g.beginPath();g.arc(W-190,200,120,0,Math.PI*2);g.stroke()}catch(e){}
+  // Kopf
+  g.fillStyle='#c27a00';g.font=`900 34px ${F}`;g.fillText('LABORFÜHRERSCHEIN NT · OSMP',90,130);
+  g.fillStyle='#1d2340';g.font=`900 72px ${F}`;
+  let nm=S.name;while(g.measureText(nm).width>620&&nm.length>3)nm=nm.slice(0,-2)+'…';
+  g.fillText(nm,90,215);
+  g.fillStyle='#5d6482';g.font=`600 38px ${F}`;g.fillText(`${S.klasse} · ${new Date(S.finished||Date.now()).toLocaleDateString('de-CH')}`,90,272);
+  // Stempel
+  g.save();g.translate(90,300);g.rotate(-0.05);g.font=`900 44px ${F}`;const sw=g.measureText('BESTANDEN').width+56;g.strokeStyle='#1f9d55';g.lineWidth=7;g.beginPath();g.roundRect(0,0,sw,80,16);g.stroke();g.fillStyle='#1f9d55';g.fillText('BESTANDEN',28,56);g.restore();
+  // Text
+  g.fillStyle='#1d2340';g.font=`400 36px ${F}`;
+  let y=wrapText(g,'hat die Sicherheitsausbildung abgeschlossen und kennt Sicherheitseinrichtungen, Notfallverhalten, Gefahrenpiktogramme und Sicherheitszeichen.',90,460,W-180,50);
+  y+=20;
+  // Resultate
+  resultRows().forEach(r=>{g.strokeStyle='#e2e6f0';g.lineWidth=2;g.beginPath();g.moveTo(90,y-36);g.lineTo(W-90,y-36);g.stroke();
+    g.font=`800 29px ${F}`;const vw=g.measureText(r.r).width;g.textAlign='right';g.fillStyle='#1d2340';g.fillText(r.r,W-90,y+6);g.textAlign='left';
+    g.font=`400 33px ${F}`;let t=r.title;const maxT=W-180-vw-36;while(g.measureText(t).width>maxT&&t.length>3)t=t.slice(0,-2).trimEnd()+'…';g.fillText(t,90,y+6);y+=72});
+  // Unterschriften
+  y=Math.max(y+70,H-200);
+  g.strokeStyle='#1d2340';g.lineWidth=3;g.beginPath();g.moveTo(90,y);g.lineTo(480,y);g.moveTo(W-480,y);g.lineTo(W-90,y);g.stroke();
+  g.fillStyle='#5d6482';g.font=`600 28px ${F}`;g.fillText('Unterschrift Schüler:in',90,y+42);g.fillText('Unterschrift P. Manetsch',W-480,y+42);
+  return await new Promise(r=>c.toBlob(r,'image/png'));
+}
+function pngName(){return fileName().replace(/\.pdf$/,'.png')}
+async function savePng(){
+  const btn=$('#png');btn.disabled=true;
+  try{
+    if(!pngFile){const b=await buildPng();pngFile=new File([b],pngName(),{type:'image/png'})}
+    let shared=false;
+    try{ if(navigator.canShare&&navigator.canShare({files:[pngFile]})){ await navigator.share({files:[pngFile],title:'Laborführerschein '+S.name}); shared=true } }
+    catch(e){ if(e&&e.name==='AbortError'){btn.disabled=false;return} }
+    if(!shared) await saveBlob(pngFile,pngName());
+    msg('ok', shared ? 'Am iPhone: «Bild sichern» wählen – dann ist der Führerschein in deinen Fotos.' : 'Bild gespeichert: <b>'+esc(pngName())+'</b>');
+  }catch(e){msg('bad','Das Bild konnte nicht gespeichert werden. Versuch es nochmals.')}
+  btn.disabled=false;
+}
+
 async function makePdf(){
   if(!window.jspdf){msg('bad',noPdfLib);return}
   const btn=$('#pdf');btn.disabled=true;btn.textContent='PDF wird erstellt …';
@@ -574,6 +628,19 @@ async function makePdf(){
   btn.disabled=false;btn.textContent='📄 PDF herunterladen';
 }
 
+function testMode(){
+  if(location.hash!=='#test') return;
+  const ex=fresh();
+  Object.assign(ex,{name:'Test Person',klasse:'Testklasse',seed:4242,started:new Date(Date.now()-35*60000).toISOString(),finished:new Date().toISOString(),test:true});
+  STEPS.forEach(st=>ex.done[st.id]=true);
+  ex.score={brand:{ok:8,total:9},notruf:{ok:5,total:5},erstehilfe:{ok:4,total:5},ghs:{ok:7,total:9},zeichen:{ok:5,total:5},fehler:{ok:13,total:14}};
+  ex.tries={brand:2,erstehilfe:2,ghs:2,fehler:2};
+  const det={};STEPS[0].items.forEach(it=>det[it.id]={where:'Beispiel: neben der Tür',none:false});
+  ex.d={detektiv:det,notruf:{meldung:'Beispiel-Notfallmeldung: Wer, was, wo, wie viele.'},jagd:{where:'Beispiel-Etikett',signal:'Achtung',p:['reizend'],rule:'Beispiel-Sicherheitshinweis'},regeln:{r:['Ich trage die Schutzbrille.','Ich esse und trinke nicht im Labor.','Ich melde jeden Unfall sofort.'],commit:true}};
+  S=ex; S.order=[...Array(STEPS.length).keys()]; S.step=STEPS.length;
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+}
+testMode();
 render();
 </script>
 </body>
