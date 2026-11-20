@@ -616,7 +616,7 @@ function renderFinish(app){
 let downloadsP=null;
 try{ if(window.claude&&window.claude.use) downloadsP=window.claude.use('downloads').catch(()=>null) }catch(e){}
 
-function fileName(){return 'Laborfuehrerschein_'+S.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')+'.pdf'}
+function fileName(){return 'Laborfuehrerschein_'+S.name.replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/Ä/g,'Ae').replace(/Ö/g,'Oe').replace(/Ü/g,'Ue').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'')+'.pdf'}
 
 async function saveBlob(blob,name){
   if(downloadsP){const dl=await Promise.race([downloadsP,new Promise(r=>setTimeout(()=>r(null),1500))]);if(dl){await dl.save({filename:name,data:blob});return true}}
